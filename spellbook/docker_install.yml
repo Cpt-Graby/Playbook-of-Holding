@@ -1,0 +1,47 @@
+---
+
+- name: Ansible script to follow the installation of docker on debian
+  hosts: all
+  gather_facts: false
+  become: true
+  tasks:
+
+    # for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; do sudo apt-get remove $pkg; done
+    - name: Remove all packages that can be problematic
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        state: absent
+      loop:
+         - docker.io
+         - docker-doc
+         - docker-compose
+         - podman-docker
+         - containerd
+         - runc
+
+    - name: apt update
+      ansible.builtin.apt:
+        update_cache: yes
+
+    - name: install ca-certificates curl
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+         - ca-certificates
+         - curl
+
+# sudo install -m 0755 -d /etc/apt/keyrings
+# sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+# sudo chmod a+r /etc/apt/keyrings/docker.asc
+    - name: Creating /etc/apt/keyrings directory
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: 'directory'
+        mode: 0755
+
+    - name: Add key to target
+      ansible.builtin.apt_key:
+        url: https://download.docker.com/linux/debian/gpg
+        keyring: /etc/apt/keyrings/docker.asc
+        state: present
