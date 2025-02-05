@@ -1,0 +1,54 @@
+---
+- name: Installing vim & it's playbook
+  host: all
+  become: true
+
+  tasks:
+    - name: Installer les paquets nécessaires
+      ansible.builtin.apt:
+        name:
+          - vim
+          - curl
+          - git
+        state: present
+        update_cache: yes
+
+    - name: Créer le répertoire .vim si nécessaire
+      ansible.builtin.file:
+        path: "~/.vim"
+        state: directory
+        mode: '0755'
+
+    - name: Télécharger vim-plug
+      ansible.builtin.get_url:
+        url: https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+        dest: "~/.vim/autoload/plug.vim"
+        mode: '0644'
+
+    - name: Créer le fichier de configuration .vimrc
+      copy:
+        dest: "~/.vimrc"
+        content: |
+          call plug#begin('~/.vim/plugged')
+
+          " Liste des plugins Vim
+          Plug 'junegunn/fzf', { 'do': { -> fzf#install() } } " Fuzzy finder
+          Plug 'tpope/vim-fugitive'        " Intégration Git
+
+          call plug#end()
+
+          syntax on
+          set number
+          set autoread
+
+          augroup filetype_specific_tab
+            autocmd!
+            autocmd FileType python set tabstop=4 shiftwidth=4 expandtab
+            autocmd FileType yaml set tabstop=2 shiftwidth=2 expandtab
+          augroup END
+
+    - name: Installer les plugins Vim
+      command: vim +PlugInstall +qall
+      args:
+        creates: "~/.vim/plugged"
+
