@@ -1,0 +1,37 @@
+---
+# ansible plabook to install and configure OpenLDAP server
+
+
+- name: Install and configure OpenLDAP server
+  hosts: all
+  become: true
+  tasks:
+    - name: Ensure the system is ubuntu or debian
+      ansible.builtin.assert:
+        that:
+          - ansible_os_family == "Debian"
+        fail_msg: "This playbook is intended for Debian-based systems only."
+
+    - name: Install OpenLDAP server and client
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - slapd
+        - ldap-utils
+
+#    - name: Configure slapd with debconf-set-selections
+#      ansible.builtin.command:
+#        cmd: "echo 'slapd slapd/password1 password {{ ldap_admin_password }}' | debconf-set-selections"
+#      args:
+#        warn: false
+#
+#    - name: Configure slapd with debconf-set-selections for confirmation password
+#      ansible.builtin.command:
+#        cmd: "echo 'slapd slapd/password2 password {{ ldap_admin_password }}' | debconf-set-selections"
+#      args:
+#        warn: false
+#
+#    - name: Reconfigure slapd to apply the settings
+#      ansible.builtin.command:
+#        cmd: "dpkg-reconfigure slapd"
